@@ -447,33 +447,71 @@
     window.print();
   }
 
-  function submitOrder() {
-    recalcAll();
+ async function submitOrder() {
+  recalcAll();
 
-    var name = document.getElementById("custName").value || "";
-    var company = document.getElementById("custCompany").value || "";
-    var email = document.getElementById("custEmail").value || "";
-    var phone = document.getElementById("custPhone").value || "";
-    var notes = document.getElementById("custNotes").value || "";
-    var grand = document.getElementById("grandTotal").textContent || "$0.00";
+  const webhookURL = "PASTE_YOUR_MAKE_WEBHOOK_URL_HERE";
 
-    var rows = document.querySelectorAll("#orderTable tbody tr");
-    var lines = [];
-    rows.forEach(function (row) {
-      var qtyInput = row.querySelector(".qty-input");
-      var qty = parseFloat(qtyInput.value);
-      if (!qty || qty <= 0) return;
-      var product = row.cells[0].textContent.trim();
-      var details = row.cells[1].innerText.replace(/\s+/g, " ").trim();
-      var boxPrice = row.querySelector("td[data-box]").getAttribute("data-box");
-      var lineTotal = row.querySelector(".total-cell").textContent;
-      lines.push(
-        product + " | " + details +
-        " | Box Price: $" + boxPrice +
-        " | Qty (boxes): " + qty +
-        " | Line Total: " + lineTotal
-      );
+  const name = document.getElementById("custName").value || "";
+  const company = document.getElementById("custCompany").value || "";
+  const email = document.getElementById("custEmail").value || "";
+  const phone = document.getElementById("custPhone").value || "";
+  const notes = document.getElementById("custNotes").value || "";
+  const grand = document.getElementById("grandTotal").textContent || "$0.00";
+
+  const rows = document.querySelectorAll("#orderTable tbody tr");
+  const items = [];
+
+  rows.forEach(function (row) {
+    const qtyInput = row.querySelector(".qty-input");
+    const qty = parseFloat(qtyInput.value);
+    if (!qty || qty <= 0) return;
+
+    const product = row.cells[0].textContent.trim();
+    const boxPrice = row.querySelector("td[data-box]").getAttribute("data-box");
+    const lineTotal = row.querySelector(".total-cell").textContent;
+
+    items.push({
+      product,
+      boxPrice: parseFloat(boxPrice),
+      quantity: qty,
+      lineTotal
     });
+  });
+
+  if (items.length === 0) {
+    alert("Please enter at least one quantity.");
+    return;
+  }
+
+  const orderData = {
+    customer: {
+      name,
+      company,
+      email,
+      phone,
+      notes
+    },
+    items,
+    grandTotal: grand,
+    submittedAt: new Date().toISOString()
+  };
+
+  try {
+    const response = await fetch(webhookURL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(orderData)
+    });
+
+    alert("Order submitted successfully!");
+  } catch (error) {
+    alert("Error submitting order.");
+    console.error(error);
+  }
+}
 
     if (lines.length === 0) {
       alert("Please enter at least one quantity before submitting the order.");
@@ -501,5 +539,6 @@
 
 </body>
 </html>
+
 
 
