@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Universal Trading Catalog Sample – Order Form</title>
-  const webhookURL = https://hook.us2.make.com/x9iih291ayxchwjgfialhallhonkw6bm;
 	<style>
     :root {
       --border-color: #ccc;
@@ -415,40 +414,75 @@
 </div>
 
 <script>
-  function formatMoney(v) {
-    return "$" + v.toFixed(2);
-  }
+const webhookURL = "https://hook.us2.make.com/x9iih291ayxchwjgfialhallhonkw6bm";
 
-  function recalcAll() {
-    var rows = document.querySelectorAll("#orderTable tbody tr");
-    var grand = 0;
-    rows.forEach(function (row) {
-      var boxCell = row.querySelector("td[data-box]");
-      var qtyInput = row.querySelector(".qty-input");
-      var totalCell = row.querySelector(".total-cell");
-      if (!boxCell || !qtyInput || !totalCell) return;
-      var price = parseFloat(boxCell.getAttribute("data-box")) || 0;
-      var qty = parseFloat(qtyInput.value);
-      if (isNaN(qty) || qty < 0) qty = 0;
-      var line = price * qty;
-      totalCell.textContent = formatMoney(line);
-      grand += line;
-    });
-    document.getElementById("grandTotal").textContent = formatMoney(grand);
-  }
+function formatMoney(v) {
+  return "$" + v.toFixed(2);
+}
 
-  document.addEventListener("input", function (e) {
-    if (e.target.classList.contains("qty-input")) {
-      recalcAll();
-    }
+function recalcAll() {
+  const rows = document.querySelectorAll("#orderTable tbody tr");
+  let grand = 0;
+
+  rows.forEach(function (row) {
+    const boxCell = row.querySelector("td[data-box]");
+    const qtyInput = row.querySelector(".qty-input");
+    const totalCell = row.querySelector(".total-cell");
+
+    if (!boxCell || !qtyInput || !totalCell) return;
+
+    const price = parseFloat(boxCell.getAttribute("data-box")) || 0;
+    let qty = parseFloat(qtyInput.value);
+    if (isNaN(qty) || qty < 0) qty = 0;
+
+    const line = price * qty;
+    totalCell.textContent = formatMoney(line);
+    grand += line;
   });
 
-  function printOrder() {
+  document.getElementById("grandTotal").textContent = formatMoney(grand);
+}
+
+document.addEventListener("input", function (e) {
+  if (e.target.classList.contains("qty-input")) {
     recalcAll();
-    window.print();
   }
+});
 
+function printOrder() {
+  recalcAll();
+  window.print();
+}
 
+async function submitOrder() {
+  recalcAll();
+
+  const name = document.getElementById("custName").value || "";
+  const company = document.getElementById("custCompany").value || "";
+  const email = document.getElementById("custEmail").value || "";
+  const phone = document.getElementById("custPhone").value || "";
+  const notes = document.getElementById("custNotes").value || "";
+  const grand = document.getElementById("grandTotal").textContent || "$0.00";
+
+  const rows = document.querySelectorAll("#orderTable tbody tr");
+  const items = [];
+
+  rows.forEach(function (row) {
+    const qtyInput = row.querySelector(".qty-input");
+    const qty = parseFloat(qtyInput.value);
+    if (!qty || qty <= 0) return;
+
+    const product = row.cells[0].textContent.trim();
+    const boxPrice = row.querySelector("td[data-box]").getAttribute("data-box");
+    const lineTotal = row.querySelector(".total-cell").textContent;
+
+    items.push({
+      product,
+      boxPrice: parseFloat(boxPrice),
+      quantity: qty,
+      lineTotal
+    });
+  });
 
   if (items.length === 0) {
     alert("Please enter at least one quantity.");
@@ -477,53 +511,21 @@
       body: JSON.stringify(orderData)
     });
 
-    alert("Order submitted successfully!");
+    if (response.ok) {
+      alert("Order submitted successfully!");
+    } else {
+      alert("Webhook error. Check Make scenario.");
+    }
+
   } catch (error) {
-    alert("Error submitting order.");
+    alert("Network error. Are you running this from a local file?");
     console.error(error);
   }
 }
-
-    if (lines.length === 0) {
-      alert("Please enter at least one quantity before submitting the order.");
-      return;
-    }
-
- async function submitOrder() {
-  recalcAll();
-
-  const webhookURL = "PASTE_YOUR_MAKE_WEBHOOK_URL_HERE";
-
-  const name = document.getElementById("custName").value || "";
-  const company = document.getElementById("custCompany").value || "";
-  const email = document.getElementById("custEmail").value || "";
-  const phone = document.getElementById("custPhone").value || "";
-  const notes = document.getElementById("custNotes").value || "";
-  const grand = document.getElementById("grandTotal").textContent || "$0.00";
-
-  const rows = document.querySelectorAll("#orderTable tbody tr");
-  const items = [];
-
-  rows.forEach(function (row) {
-    const qtyInput = row.querySelector(".qty-input");
-    const qty = parseFloat(qtyInput.value);
-    if (!qty || qty <= 0) return;
-
-    const product = row.cells[0].textContent.trim();
-    const boxPrice = row.querySelector("td[data-box]").getAttribute("data-box");
-    const lineTotal = row.querySelector(".total-cell").textContent;
-
-    items.push({
-      product,
-      boxPrice: parseFloat(boxPrice),
-      quantity: qty,
-      lineTotal
-    });
-  });
 </script>
-const webhookURL = https://hook.us2.make.com/x9iih291ayxchwjgfialhallhonkw6bm;
 </body>
 </html>
+
 
 
 
