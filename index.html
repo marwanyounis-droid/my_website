@@ -448,37 +448,7 @@
     window.print();
   }
 
- async function submitOrder() {
-  recalcAll();
 
-  const webhookURL = "PASTE_YOUR_MAKE_WEBHOOK_URL_HERE";
-
-  const name = document.getElementById("custName").value || "";
-  const company = document.getElementById("custCompany").value || "";
-  const email = document.getElementById("custEmail").value || "";
-  const phone = document.getElementById("custPhone").value || "";
-  const notes = document.getElementById("custNotes").value || "";
-  const grand = document.getElementById("grandTotal").textContent || "$0.00";
-
-  const rows = document.querySelectorAll("#orderTable tbody tr");
-  const items = [];
-
-  rows.forEach(function (row) {
-    const qtyInput = row.querySelector(".qty-input");
-    const qty = parseFloat(qtyInput.value);
-    if (!qty || qty <= 0) return;
-
-    const product = row.cells[0].textContent.trim();
-    const boxPrice = row.querySelector("td[data-box]").getAttribute("data-box");
-    const lineTotal = row.querySelector(".total-cell").textContent;
-
-    items.push({
-      product,
-      boxPrice: parseFloat(boxPrice),
-      quantity: qty,
-      lineTotal
-    });
-  });
 
   if (items.length === 0) {
     alert("Please enter at least one quantity.");
@@ -519,27 +489,42 @@
       return;
     }
 
-    var body = "";
-    body += "Customer Name: " + name + "\n";
-    body += "Company: " + company + "\n";
-    body += "Email: " + email + "\n";
-    body += "Phone: " + phone + "\n";
-    body += "Notes: " + notes + "\n\n";
-    body += "Order Details:\n";
-    body += lines.join("\n") + "\n\n";
-    body += "Grand Total: " + grand + "\n";
+ async function submitOrder() {
+  recalcAll();
 
-    var subject = "New Catalog Order – " + (name || "Customer");
-    var mailto = "mailto:marwan.younis@gmail.com"
-               + "?subject=" + encodeURIComponent(subject)
-               + "&body=" + encodeURIComponent(body);
+  const webhookURL = "PASTE_YOUR_MAKE_WEBHOOK_URL_HERE";
 
-    window.location.href = mailto;
-  }
+  const name = document.getElementById("custName").value || "";
+  const company = document.getElementById("custCompany").value || "";
+  const email = document.getElementById("custEmail").value || "";
+  const phone = document.getElementById("custPhone").value || "";
+  const notes = document.getElementById("custNotes").value || "";
+  const grand = document.getElementById("grandTotal").textContent || "$0.00";
+
+  const rows = document.querySelectorAll("#orderTable tbody tr");
+  const items = [];
+
+  rows.forEach(function (row) {
+    const qtyInput = row.querySelector(".qty-input");
+    const qty = parseFloat(qtyInput.value);
+    if (!qty || qty <= 0) return;
+
+    const product = row.cells[0].textContent.trim();
+    const boxPrice = row.querySelector("td[data-box]").getAttribute("data-box");
+    const lineTotal = row.querySelector(".total-cell").textContent;
+
+    items.push({
+      product,
+      boxPrice: parseFloat(boxPrice),
+      quantity: qty,
+      lineTotal
+    });
+  });
 </script>
 const webhookURL = https://hook.us2.make.com/x9iih291ayxchwjgfialhallhonkw6bm;
 </body>
 </html>
+
 
 
 
