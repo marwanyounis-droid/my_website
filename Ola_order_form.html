@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Universal Trading Catalog Sample – Order Form</title>
+  <style>
+    :root {
+      --border-color: #ccc;
+      --header-bg: #f5f5f5;
+      --accent: #005b96;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      margin: 0;
+      padding: 16px;
+      background: #fafafa;
+      color: #222;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 8px;
+      color: var(--accent);
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    .controls button {
+      padding: 6px 12px;
+      border-radius: 4px;
+      border: 1px solid var(--accent);
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+    }
+    .controls button:hover {
+      background: #00416b;
+    }
+    .customer-info {
+      max-width: 900px;
+      margin: 0 auto 16px auto;
+      background: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 8px;
+    }
+    .customer-info label {
+      display: flex;
+      flex-direction: column;
+      font-size: 13px;
+    }
+    .customer-info input, .customer-info textarea {
+      margin-top: 2px;
+      padding: 4px 6px;
+      font-size: 13px;
+    }
+    .table-wrapper {
+      max-width: 1200px;
+      margin: 0 auto;
+      overflow-x: auto;
+      background: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      vertical-align: top;
+      text-align: left;
+      font-size: 13px;
+    }
+    th {
+      background: #f0f0f0;
+      font-weight: bold;
+    }
+    .qty-cell {
+      width: 80px;
+      text-align: center;
+    }
+    .qty-input {
+      width: 60px;
+      text-align: right;
+    }
+    .total-cell {
+      width: 90px;
+      text-align: right;
+      white-space: nowrap;
+    }
+    .grand-total-row td {
+      font-weight: bold;
+      background: #f9f9f9;
+    }
+    .grand-total-label {
+      text-align: right;
+    }
+    .grand-total-value {
+      text-align: right;
+      font-size: 15px;
+    }
+
+    @media print {
+      body {
+        background: #fff;
+        padding: 0;
+      }
+      .controls {
+        display: none;
+      }
+      .customer-info, .table-wrapper {
+        border: none;
+        margin: 0;
+        padding: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<h1>Universal Trading Catalog Sample – Order Form</h1>
+
+<div class="customer-info">
+  <label>
+    Customer Name
+    <input type="text" id="custName" placeholder="Customer Name">
+  </label>
+  <label>
+    Company
+    <input type="text" id="custCompany" placeholder="Company">
+  </label>
+  <label>
+    Email
+    <input type="email" id="custEmail" placeholder="Email">
+  </label>
+  <label>
+    Phone
+    <input type="text" id="custPhone" placeholder="Phone">
+  </label>
+  <label style="grid-column: 1 / -1;">
+    Notes
+    <textarea id="custNotes" rows="2" placeholder="Special instructions, delivery notes, etc."></textarea>
+  </label>
+</div>
+
+<div class="controls">
+  <button type="button" onclick="recalcAll()">Recalculate Totals</button>
+  <button type="button" onclick="printOrder()">Print Order</button>
+  <button type="button" onclick="submitOrder()">Submit Order</button>
+</div>
+
+<div class="table-wrapper">
+  <table id="orderTable">
+    <thead>
+      <tr>
+        <th>Product</th>
+	<th>Thumbnail</th> 
+        <th>Details</th>
+        <th>Unit Price</th>
+        <th>Box Price</th>
+ 	<th>Thumbnail</th>
+        <th>Quantity (Boxes)</th>
+        <th>Line Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Row 1 -->
+      <tr>
+        <td>Gushers – Original Peg Bag</td>
+	<td><img src="gushers-original-120g.jpg" alt="gushers-original-120g">        
+        <td>Size: 120g<br>CsPk: 6/8ct</td>
+        <td data-unit="3.25">$3.25</td>
+        <td data-box="26">$26</td>
+	<td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 2 -->
+      <tr>
+        <td>Gushers – Tropical Peg Bag</td>
+	<td><img src="gushers-tropical-120g.jpg" alt="gushers-tropical-120g"></td>
+        <td>Size: 120g<br>CsPk: 6/8ct</td>
+        <td data-unit="3.25">$3.25</td>
+        <td data-box="26">$26</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 3 -->
+      <tr>
+        <td>Gushers – Strawberry Watermelon Peg Bag</td>
+	<td><img src="gushers-strawberry-watermelon-120g.jpg" alt="gushers-strawberry-watermelon-120g">
+        <td>Size: 120g<br>CsPk: 6/8ct</td>
+        <td data-unit="3.25">$3.25</td>
+        <td data-box="26">$26</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 4 -->
+      <tr>
+        <td>Gushers – Flavor Mixers Peg Bag</td>
+	<td><img src="gushers-flavor-mixers-120g.jpg" alt="gushers-flavor-mixers-120g">
+        <td>Size: 120g<br>CsPk: 6/8ct</td>
+        <td data-unit="3.25">$3.25</td>
+        <td data-box="26">$26</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 5 -->
+      <tr>
+        <td>Hot Tamales Cotton Candy Peg Bag</td>
+	<td><img src="hot-tamales-fierce-cinnamon-141g.jpg" alt="hot-tamales-fierce-cinnamon-141g">
+        <td>Size: 85g<br>CsPk: 12pk</td>
+        <td data-unit="4">$4.00</td>
+        <td data-box="48">$48</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+
+      <!-- Row 6 -->
+      <tr>
+        <td>Mike &amp; Ike Cotton Candy Cherry Peg Bag - Orange, Lemon &amp; Lime</td>
+	<td><img src="mike-ike-cotton-candy-cherry-95g.jpg" alt="mike-ike-cotton-candy-cherry-95g">
+	<td>Size: 95g<br>CsPk: 12pk</td>
+        <td data-unit="4">$4.00</td>
+        <td data-box="48">$48</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 7 -->
+      <tr>
+        <td>Dr. Pepper Cotton Candy Peg Bag</td>
+        <td>Size: 88g<br>CsPk: 12pk</td>
+        <td data-unit="4">$4.00</td>
+        <td data-box="48">$48</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 8 -->
+      <tr>
+        <td>Hawaiian Punch Cotton Candy Peg Bag - Fruit Juicy Red</td>
+        <td>Size: 88g<br>CsPk: 12pk</td>
+        <td data-unit="4">$4.00</td>
+        <td data-box="48">$48</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 9 -->
+      <tr>
+        <td>Starburst FaveReds Cotton Candy Peg Bag</td>
+        <td>Size: 88g<br>CsPk: 12pk</td>
+        <td data-unit="4">$4.00</td>
+        <td data-box="48">$48</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 10 -->
+      <tr>
+        <td>Skittles Cotton Candy Peg Bag – Original</td>
+        <td>Size: 88g<br>CsPk: 12pk</td>
+        <td data-unit="4">$4.00</td>
+        <td data-box="48">$48</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+
+      <!-- Row 11 -->
+      <tr>
+        <td>Skittles Gummies Original Peg Bag</td>
+        <td>Size: 164g<br>CsPk: 12pk</td>
+        <td data-unit="3.25">$3.25</td>
+        <td data-box="39">$39</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 12 -->
+      <tr>
+        <td>Skittles Gummies Fuego Peg Bag</td>
+        <td>Size: 164g<br>CsPk: 12pk</td>
+        <td data-unit="3.25">$3.25</td>
+        <td data-box="39">$39</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 13 -->
+      <tr>
+        <td>Skittles Gummies Sour Peg Bag</td>
+        <td>Size: 164g<br>CsPk: 12pk</td>
+        <td data-unit="3.25">$3.25</td>
+        <td data-box="39">$39</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 14 -->
+      <tr>
+        <td>Skittles Wild Berry Peg Bag</td>
+        <td>Size: 164g<br>CsPk: 12pk</td>
+        <td data-unit="3.25">$3.25</td>
+        <td data-box="39">$39</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 15 -->
+      <tr>
+        <td>Starburst Gummies Original Peg Bag</td>
+        <td>Size: 164.4g<br>CsPk: 12pk</td>
+        <td data-unit="3.25">$3.25</td>
+        <td data-box="39">$39</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+
+      <!-- Row 16 -->
+      <tr>
+        <td>Starburst Gummies Duos 2in1 Peg Bag</td>
+        <td>Size: 164.4g<br>CsPk: 12pk</td>
+        <td data-unit="3.25">$3.25</td>
+        <td data-box="39">$39</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 17 -->
+      <tr>
+        <td>Starburst Gummies All Pink Peg Bag</td>
+        <td>Size: 164.4g<br>CsPk: 12pk</td>
+        <td data-unit="3.25">$3.25</td>
+        <td data-box="39">$39</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 18 -->
+      <tr>
+        <td>Starburst Gummies Sours Peg Bag</td>
+        <td>Size: 164.4g<br>CsPk: 12pk</td>
+        <td data-unit="3.25">$3.25</td>
+        <td data-box="39">$39</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 19 -->
+      <tr>
+        <td>Mike &amp; Ike Original Peg Bag</td>
+        <td>Size: 141g<br>CsPk: 12pk</td>
+        <td data-unit="2.43">$2.43</td>
+        <td data-box="29.16">$29.16</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 20 -->
+      <tr>
+        <td>Mike &amp; Ike Mega Mix Sour Peg Bag</td>
+        <td>Size: 141g<br>CsPk: 12pk</td>
+        <td data-unit="2.43">$2.43</td>
+        <td data-box="29.16">$29.16</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+
+      <!-- Row 21 -->
+      <tr>
+        <td>Mike &amp; Ike Mega Mix Peg Bag</td>
+        <td>Size: 141g<br>CsPk: 12pk</td>
+        <td data-unit="2.43">$2.43</td>
+        <td data-box="29.16">$29.16</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 22 -->
+      <tr>
+        <td>Hot Tamales Fierce Cinnamon Peg Bag</td>
+        <td>Size: 141g<br>CsPk: 12pk</td>
+        <td data-unit="2.43">$2.43</td>
+        <td data-box="29.16">$29.16</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 23 -->
+      <tr>
+        <td>Airhead Soft Filled Bites Peg Bag</td>
+        <td>Size: 170g<br>CsPk: 12pk</td>
+        <td data-unit="3.50">$3.50</td>
+        <td data-box="42">$42</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 24 -->
+      <tr>
+        <td>Airhead Bites Original Peg Bag</td>
+        <td>Size: 170g<br>CsPk: 12pk</td>
+        <td data-unit="3.50">$3.50</td>
+        <td data-box="42">$42</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 25 -->
+      <tr>
+        <td>Airhead Bites Paradise Blend Peg Bags</td>
+        <td>Size: 170g<br>CsPk: 12pk</td>
+        <td data-unit="3.50">$3.50</td>
+        <td data-box="42">$42</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr class="grand-total-row">
+        <td colspan="5" class="grand-total-label">Grand Total:</td>
+        <td class="grand-total-value" id="grandTotal">$0.00</td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
+<script>
+  function formatMoney(v) {
+    return "$" + v.toFixed(2);
+  }
+
+  function recalcAll() {
+    var rows = document.querySelectorAll("#orderTable tbody tr");
+    var grand = 0;
+    rows.forEach(function (row) {
+      var boxCell = row.querySelector("td[data-box]");
+      var qtyInput = row.querySelector(".qty-input");
+      var totalCell = row.querySelector(".total-cell");
+      if (!boxCell || !qtyInput || !totalCell) return;
+      var price = parseFloat(boxCell.getAttribute("data-box")) || 0;
+      var qty = parseFloat(qtyInput.value);
+      if (isNaN(qty) || qty < 0) qty = 0;
+      var line = price * qty;
+      totalCell.textContent = formatMoney(line);
+      grand += line;
+    });
+    document.getElementById("grandTotal").textContent = formatMoney(grand);
+  }
+
+  document.addEventListener("input", function (e) {
+    if (e.target.classList.contains("qty-input")) {
+      recalcAll();
+    }
+  });
+
+  function printOrder() {
+    recalcAll();
+    window.print();
+  }
+
+  function submitOrder() {
+    recalcAll();
+
+    var name = document.getElementById("custName").value || "";
+    var company = document.getElementById("custCompany").value || "";
+    var email = document.getElementById("custEmail").value || "";
+    var phone = document.getElementById("custPhone").value || "";
+    var notes = document.getElementById("custNotes").value || "";
+    var grand = document.getElementById("grandTotal").textContent || "$0.00";
+
+    var rows = document.querySelectorAll("#orderTable tbody tr");
+    var lines = [];
+    rows.forEach(function (row) {
+      var qtyInput = row.querySelector(".qty-input");
+      var qty = parseFloat(qtyInput.value);
+      if (!qty || qty <= 0) return;
+      var product = row.cells[0].textContent.trim();
+      var details = row.cells[1].innerText.replace(/\s+/g, " ").trim();
+      var boxPrice = row.querySelector("td[data-box]").getAttribute("data-box");
+      var lineTotal = row.querySelector(".total-cell").textContent;
+      lines.push(
+        product + " | " + details +
+        " | Box Price: $" + boxPrice +
+        " | Qty (boxes): " + qty +
+        " | Line Total: " + lineTotal
+      );
+    });
+
+    if (lines.length === 0) {
+      alert("Please enter at least one quantity before submitting the order.");
+      return;
+    }
+
+    var body = "";
+    body += "Customer Name: " + name + "\n";
+    body += "Company: " + company + "\n";
+    body += "Email: " + email + "\n";
+    body += "Phone: " + phone + "\n";
+    body += "Notes: " + notes + "\n\n";
+    body += "Order Details:\n";
+    body += lines.join("\n") + "\n\n";
+    body += "Grand Total: " + grand + "\n";
+
+    var subject = "New Catalog Order – " + (name || "Customer");
+    var mailto = "mailto:ola.jabero@gmail.com"
+               + "?subject=" + encodeURIComponent(subject)
+               + "&body=" + encodeURIComponent(body);
+
+    window.location.href = mailto;
+  }
+</script>
+
+</body>
+</html>

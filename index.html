@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      body { font-family: Arial; padding: 20px; }
+      .chip { display:inline-block; padding:6px 10px; background:#e0e0e0; margin:4px; border-radius:16px; }
+      .chip span { cursor:pointer; margin-left:8px; }
+      #results div { padding:6px; cursor:pointer; }
+      #results div:hover { background:#f0f0f0; }
+    </style>
+  </head>
+
+  <body>
+    <h3>Select Items</h3>
+
+    <input id="search" type="text" placeholder="Search items..." onkeyup="filterItems()" style="width:100%; padding:8px;">
+    <div id="results"></div>
+
+    <h4>Selected:</h4>
+    <div id="selected"></div>
+
+    <button onclick="submit()">Submit Order</button>
+
+    <script>
+      let allItems = [];
+      let selected = [];
+
+      google.script.run.withSuccessHandler(items => {
+        allItems = items;
+        renderList(items);
+      }).getItems();
+
+      function filterItems() {
+        const q = document.getElementById('search').value.toLowerCase();
+        const filtered = allItems.filter(i => i.toLowerCase().includes(q));
+        renderList(filtered);
+      }
+
+      function renderList(list) {
+        const div = document.getElementById('results');
+        div.innerHTML = '';
+        list.forEach(item => {
+          const el = document.createElement('div');
+          el.textContent = item;
+          el.onclick = () => addItem(item);
+          div.appendChild(el);
+        });
+      }
+
+      function addItem(item) {
+        if (!selected.includes(item)) {
+          selected.push(item);
+          renderSelected();
+        }
+      }
+
+      function removeItem(item) {
+        selected = selected.filter(i => i !== item);
+        renderSelected();
+      }
+
+      function renderSelected() {
+        const div = document.getElementById('selected');
+        div.innerHTML = '';
+        selected.forEach(item => {
+          const chip = document.createElement('div');
+          chip.className = 'chip';
+          chip.innerHTML = item + ' <span onclick="removeItem(\''+item+'\')">x</span>';
+          div.appendChild(chip);
+        });
+      }
+
+      function submit() {
+        google.script.run.withSuccessHandler(() => {
+          alert('Order submitted!');
+          selected = [];
+          renderSelected();
+        }).submitOrder(selected);
+      }
+    </script>
+  </body>
+</html>
