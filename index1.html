@@ -1,83 +1,716 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <base target="_top">
-    <style>
-      body { font-family: Arial; padding: 20px; }
-      .chip { display:inline-block; padding:6px 10px; background:#e0e0e0; margin:4px; border-radius:16px; }
-      .chip span { cursor:pointer; margin-left:8px; }
-      #results div { padding:6px; cursor:pointer; }
-      #results div:hover { background:#f0f0f0; }
-    </style>
-  </head>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Universal Trading Catalog Sample – Order Form</title>
+  <style>
+    :root {
+      --border-color: #ccc;
+      --header-bg: #f5f5f5;
+      --accent: #005b96;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      margin: 0;
+      padding: 16px;
+      background: #fafafa;
+      color: #222;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 8px;
+      color: var(--accent);
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    .controls button {
+      padding: 6px 12px;
+      border-radius: 4px;
+      border: 1px solid var(--accent);
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+    }
+    .controls button:hover { background: #00416b; }
 
-  <body>
-    <h3>Select Items</h3>
+    .customer-info {
+      max-width: 1100px;
+      margin: 0 auto 16px auto;
+      background: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 8px;
+    }
+    .customer-info label {
+      display: flex;
+      flex-direction: column;
+      font-size: 13px;
+    }
+    .customer-info input, .customer-info textarea {
+      margin-top: 2px;
+      padding: 6px 8px;
+      font-size: 13px;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+    }
 
-    <input id="search" type="text" placeholder="Search items..." onkeyup="filterItems()" style="width:100%; padding:8px;">
-    <div id="results"></div>
+    .table-wrapper {
+      max-width: 1200px;
+      margin: 0 auto;
+      overflow-x: auto;
+      background: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 8px;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      vertical-align: top;
+      text-align: left;
+      font-size: 13px;
+    }
+    th { background: #f0f0f0; font-weight: bold; }
 
-    <h4>Selected:</h4>
-    <div id="selected"></div>
+    .qty-cell { width: 120px; text-align: center; }
+    .qty-input { width: 80px; text-align: right; padding: 6px; }
+    .total-cell { width: 110px; text-align: right; white-space: nowrap; }
+    .money { text-align: right; white-space: nowrap; }
+    .grand-total-row td { font-weight: bold; background: #f9f9f9; }
+    .grand-total-label { text-align: right; }
+    .grand-total-value { text-align: right; font-size: 15px; }
 
-    <button onclick="submit()">Submit Order</button>
+    /* ===== NEW: Order summary card ===== */
+    .summary-wrap{
+      max-width: 1200px;
+      margin: 0 auto 16px auto;
+      background: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .summary-header{
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 12px 12px;
+      background: var(--header-bg);
+      border-bottom: 1px solid var(--border-color);
+    }
+    .summary-header h2{
+      margin: 0;
+      font-size: 16px;
+      color: #111;
+    }
+    .badge{
+      display:inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #eaf2fa;
+      border: 1px solid #cfe2f5;
+      color: #1b4e7a;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .summary-body{
+      padding: 12px;
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 12px;
+    }
+    .summary-box{
+      border: 1px solid #e3e3e3;
+      border-radius: 6px;
+      overflow:hidden;
+      background:#fff;
+    }
+    .summary-box .box-title{
+      padding: 10px 10px;
+      background:#fbfbfb;
+      border-bottom:1px solid #e3e3e3;
+      font-weight: bold;
+      font-size: 13px;
+    }
+    .summary-box .box-content{
+      padding: 10px;
+      font-size: 13px;
+    }
+    .kv{
+      display:grid;
+      grid-template-columns: 120px 1fr;
+      gap: 6px 10px;
+    }
+    .kv div{ padding: 2px 0; }
+    .muted{ color:#666; }
+    .empty-hint{
+      padding: 12px;
+      border: 1px dashed #cfcfcf;
+      border-radius: 6px;
+      background: #fcfcfc;
+      color:#666;
+      font-size: 13px;
+    }
+    #summaryTable th{ background:#f2f6fb; }
+    #summaryTable td{ vertical-align: middle; }
+    #summaryTable .qty { text-align: right; width: 80px; }
+    #summaryTable .details { color:#555; font-size: 12px; }
 
-    <script>
-      let allItems = [];
-      let selected = [];
+    /* ===== Print tweaks ===== */
+    @media print {
+      body { background: #fff; padding: 0; }
+      .controls { display: none; }
+      .customer-info, .table-wrapper, .summary-wrap { border: none; margin: 0; padding: 0; }
+      .summary-wrap{ margin-bottom: 8px; }
+      /* Optional: hide the catalog table and only print the summary */
+      /* .table-wrapper { display:none; } */
+    }
+  </style>
+</head>
+<body>
 
-      google.script.run.withSuccessHandler(items => {
-        allItems = items;
-        renderList(items);
-      }).getItems();
+<h1>Universal Trading Catalog Sample – Order Form</h1>
 
-      function filterItems() {
-        const q = document.getElementById('search').value.toLowerCase();
-        const filtered = allItems.filter(i => i.toLowerCase().includes(q));
-        renderList(filtered);
-      }
+<div class="customer-info">
+  <label>
+    Customer Name
+    <input type="text" id="custName" placeholder="Customer Name">
+  </label>
+  <label>
+    Company
+    <input type="text" id="custCompany" placeholder="Company">
+  </label>
+  <label>
+    Email
+    <input type="email" id="custEmail" placeholder="Email">
+  </label>
+  <label>
+    Phone
+    <input type="text" id="custPhone" placeholder="Phone">
+  </label>
+  <label style="grid-column: 1 / -1;">
+    Notes
+    <textarea id="custNotes" rows="2" placeholder="Special instructions, delivery notes, etc."></textarea>
+  </label>
+</div>
 
-      function renderList(list) {
-        const div = document.getElementById('results');
-        div.innerHTML = '';
-        list.forEach(item => {
-          const el = document.createElement('div');
-          el.textContent = item;
-          el.onclick = () => addItem(item);
-          div.appendChild(el);
-        });
-      }
+<div class="controls">
+  <button type="button" onclick="recalcAll()">Recalculate Totals</button>
+  <button type="button" onclick="printOrder()">Print Order</button>
+  <button type="button" onclick="submitOrder()">Submit Order</button>
+</div>
 
-      function addItem(item) {
-        if (!selected.includes(item)) {
-          selected.push(item);
-          renderSelected();
-        }
-      }
+<!-- ===== NEW: Order Summary (nicely formatted results) ===== -->
+<section class="summary-wrap" id="summarySection" aria-live="polite">
+  <div class="summary-header">
+    <h2>Order Summary</h2>
+    <span class="badge" id="summaryBadge">No items selected</span>
+  </div>
 
-      function removeItem(item) {
-        selected = selected.filter(i => i !== item);
-        renderSelected();
-      }
+  <div class="summary-body">
+    <div class="summary-box">
+      <div class="box-title">Items Ordered</div>
+      <div class="box-content">
+        <div id="emptySummary" class="empty-hint">
+          Enter quantities in the catalog below. Your selected items will appear here automatically.
+        </div>
 
-      function renderSelected() {
-        const div = document.getElementById('selected');
-        div.innerHTML = '';
-        selected.forEach(item => {
-          const chip = document.createElement('div');
-          chip.className = 'chip';
-          chip.innerHTML = item + ' <span onclick="removeItem(\''+item+'\')">x</span>';
-          div.appendChild(chip);
-        });
-      }
+        <div class="table-wrapper" style="border:none; padding:0; margin:0; background:transparent; display:none;" id="summaryTableWrap">
+          <table id="summaryTable">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Details</th>
+                <th class="money">Box Price</th>
+                <th class="money">Qty</th>
+                <th class="money">Line Total</th>
+              </tr>
+            </thead>
+            <tbody id="summaryTbody"></tbody>
+            <tfoot>
+              <tr class="grand-total-row">
+                <td colspan="4" class="grand-total-label">Grand Total:</td>
+                <td class="grand-total-value" id="summaryGrand">$0.00</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
 
-      function submit() {
-        google.script.run.withSuccessHandler(() => {
-          alert('Order submitted!');
-          selected = [];
-          renderSelected();
-        }).submitOrder(selected);
-      }
-    </script>
-  </body>
+    <div class="summary-box">
+      <div class="box-title">Customer & Notes</div>
+      <div class="box-content">
+        <div class="kv">
+          <div class="muted">Name</div><div id="sumName">—</div>
+          <div class="muted">Company</div><div id="sumCompany">—</div>
+          <div class="muted">Email</div><div id="sumEmail">—</div>
+          <div class="muted">Phone</div><div id="sumPhone">—</div>
+          <div class="muted">Notes</div><div id="sumNotes">—</div>
+        </div>
+        <div style="margin-top:10px;" class="muted">
+          Last updated: <span id="sumUpdated">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="table-wrapper">
+  <table id="orderTable">
+    <thead>
+      <tr>
+        <th>Product</th>
+        <th>Details</th>
+        <th>Unit Price</th>
+        <th>Box Price</th>
+        <th>Quantity (Boxes)</th>
+        <th>Line Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Row 1 -->
+      <tr>
+        <td>Gushers – Original Peg Bag</td>
+        <td>Size: 120g<br>CsPk: 6/8ct</td>
+        <td data-unit="3.25">$3.25</td>
+        <td data-box="26">$26</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 2 -->
+      <tr>
+        <td>Gushers – Tropical Peg Bag</td>
+        <td>Size: 120g<br>CsPk: 6/8ct</td>
+        <td data-unit="3.25">$3.25</td>
+        <td data-box="26">$26</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 3 -->
+      <tr>
+        <td>Gushers – Strawberry Watermelon Peg Bag</td>
+        <td>Size: 120g<br>CsPk: 6/8ct</td>
+        <td data-unit="3.25">$3.25</td>
+        <td data-box="26">$26</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 4 -->
+      <tr>
+        <td>Gushers – Flavor Mixers Peg Bag</td>
+        <td>Size: 120g<br>CsPk: 6/8ct</td>
+        <td data-unit="3.25">$3.25</td>
+        <td data-box="26">$26</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 5 -->
+      <tr>
+        <td>Hot Tamales Cotton Candy Peg Bag</td>
+        <td>Size: 85g<br>CsPk: 12pk</td>
+        <td data-unit="4">$4.00</td>
+        <td data-box="48">$48</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+
+      <!-- Row 6 -->
+      <tr>
+        <td>Mike &amp; Ike Cotton Candy Cherry Peg Bag - Orange, Lemon &amp; Lime</td>
+        <td>Size: 95g<br>CsPk: 12pk</td>
+        <td data-unit="4">$4.00</td>
+        <td data-box="48">$48</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 7 -->
+      <tr>
+        <td>Dr. Pepper Cotton Candy Peg Bag</td>
+        <td>Size: 88g<br>CsPk: 12pk</td>
+        <td data-unit="4">$4.00</td>
+        <td data-box="48">$48</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 8 -->
+      <tr>
+        <td>Hawaiian Punch Cotton Candy Peg Bag - Fruit Juicy Red</td>
+        <td>Size: 88g<br>CsPk: 12pk</td>
+        <td data-unit="4">$4.00</td>
+        <td data-box="48">$48</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 9 -->
+      <tr>
+        <td>Starburst FaveReds Cotton Candy Peg Bag</td>
+        <td>Size: 88g<br>CsPk: 12pk</td>
+        <td data-unit="4">$4.00</td>
+        <td data-box="48">$48</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 10 -->
+      <tr>
+        <td>Skittles Cotton Candy Peg Bag – Original</td>
+        <td>Size: 88g<br>CsPk: 12pk</td>
+        <td data-unit="4">$4.00</td>
+        <td data-box="48">$48</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+
+      <!-- Row 11 -->
+      <tr>
+        <td>Skittles Gummies Original Peg Bag</td>
+        <td>Size: 164g<br>CsPk: 12pk</td>
+        <td data-unit="3.25">$3.25</td>
+        <td data-box="39">$39</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 12 -->
+      <tr>
+        <td>Skittles Gummies Fuego Peg Bag</td>
+        <td>Size: 164g<br>CsPk: 12pk</td>
+        <td data-unit="3.25">$3.25</td>
+        <td data-box="39">$39</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 13 -->
+      <tr>
+        <td>Skittles Gummies Sour Peg Bag</td>
+        <td>Size: 164g<br>CsPk: 12pk</td>
+        <td data-unit="3.25">$3.25</td>
+        <td data-box="39">$39</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 14 -->
+      <tr>
+        <td>Skittles Wild Berry Peg Bag</td>
+        <td>Size: 164g<br>CsPk: 12pk</td>
+        <td data-unit="3.25">$3.25</td>
+        <td data-box="39">$39</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 15 -->
+      <tr>
+        <td>Starburst Gummies Original Peg Bag</td>
+        <td>Size: 164.4g<br>CsPk: 12pk</td>
+        <td data-unit="3.25">$3.25</td>
+        <td data-box="39">$39</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+
+      <!-- Row 16 -->
+      <tr>
+        <td>Starburst Gummies Duos 2in1 Peg Bag</td>
+        <td>Size: 164.4g<br>CsPk: 12pk</td>
+        <td data-unit="3.25">$3.25</td>
+        <td data-box="39">$39</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 17 -->
+      <tr>
+        <td>Starburst Gummies All Pink Peg Bag</td>
+        <td>Size: 164.4g<br>CsPk: 12pk</td>
+        <td data-unit="3.25">$3.25</td>
+        <td data-box="39">$39</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 18 -->
+      <tr>
+        <td>Starburst Gummies Sours Peg Bag</td>
+        <td>Size: 164.4g<br>CsPk: 12pk</td>
+        <td data-unit="3.25">$3.25</td>
+        <td data-box="39">$39</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 19 -->
+      <tr>
+        <td>Mike &amp; Ike Original Peg Bag</td>
+        <td>Size: 141g<br>CsPk: 12pk</td>
+        <td data-unit="2.43">$2.43</td>
+        <td data-box="29.16">$29.16</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 20 -->
+      <tr>
+        <td>Mike &amp; Ike Mega Mix Sour Peg Bag</td>
+        <td>Size: 141g<br>CsPk: 12pk</td>
+        <td data-unit="2.43">$2.43</td>
+        <td data-box="29.16">$29.16</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+
+      <!-- Row 21 -->
+      <tr>
+        <td>Mike &amp; Ike Mega Mix Peg Bag</td>
+        <td>Size: 141g<br>CsPk: 12pk</td>
+        <td data-unit="2.43">$2.43</td>
+        <td data-box="29.16">$29.16</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 22 -->
+      <tr>
+        <td>Hot Tamales Fierce Cinnamon Peg Bag</td>
+        <td>Size: 141g<br>CsPk: 12pk</td>
+        <td data-unit="2.43">$2.43</td>
+        <td data-box="29.16">$29.16</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 23 -->
+      <tr>
+        <td>Airhead Soft Filled Bites Peg Bag</td>
+        <td>Size: 170g<br>CsPk: 12pk</td>
+        <td data-unit="3.50">$3.50</td>
+        <td data-box="42">$42</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 24 -->
+      <tr>
+        <td>Airhead Bites Original Peg Bag</td>
+        <td>Size: 170g<br>CsPk: 12pk</td>
+        <td data-unit="3.50">$3.50</td>
+        <td data-box="42">$42</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+      <!-- Row 25 -->
+      <tr>
+        <td>Airhead Bites Paradise Blend Peg Bags</td>
+        <td>Size: 170g<br>CsPk: 12pk</td>
+        <td data-unit="3.50">$3.50</td>
+        <td data-box="42">$42</td>
+        <td class="qty-cell"><input type="number" min="0" step="1" class="qty-input"></td>
+        <td class="total-cell">$0.00</td>
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr class="grand-total-row">
+        <td colspan="5" class="grand-total-label">Grand Total:</td>
+        <td class="grand-total-value" id="grandTotal">$0.00</td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
+<script>
+const webhookURL = "https://hook.us2.make.com/x9iih291ayxchwjgfialhallhonkw6bm";
+
+function formatMoney(v) {
+  return "$" + v.toFixed(2);
+}
+
+function setText(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
+function updateSummary() {
+  // Customer info
+  const name = document.getElementById("custName").value || "—";
+  const company = document.getElementById("custCompany").value || "—";
+  const email = document.getElementById("custEmail").value || "—";
+  const phone = document.getElementById("custPhone").value || "—";
+  const notes = document.getElementById("custNotes").value || "—";
+
+  setText("sumName", name);
+  setText("sumCompany", company);
+  setText("sumEmail", email);
+  setText("sumPhone", phone);
+  setText("sumNotes", notes);
+  setText("sumUpdated", new Date().toLocaleString());
+
+  // Items table
+  const rows = document.querySelectorAll("#orderTable tbody tr");
+  const tbody = document.getElementById("summaryTbody");
+  tbody.innerHTML = "";
+
+  let itemCount = 0;
+  let grand = 0;
+
+  rows.forEach((row) => {
+    const qtyInput = row.querySelector(".qty-input");
+    const qty = parseFloat(qtyInput?.value || "0");
+    if (!qty || qty <= 0) return;
+
+    const product = row.cells[0].textContent.trim();
+    const detailsHtml = row.cells[1].innerHTML; // keep Size/CsPk formatting
+    const boxCell = row.querySelector("td[data-box]");
+    const boxPriceNum = parseFloat(boxCell?.getAttribute("data-box") || "0");
+    const line = boxPriceNum * qty;
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(product)}</td>
+      <td class="details">${detailsHtml}</td>
+      <td class="money">${formatMoney(boxPriceNum)}</td>
+      <td class="money">${qty}</td>
+      <td class="money">${formatMoney(line)}</td>
+    `;
+    tbody.appendChild(tr);
+
+    itemCount += 1;
+    grand += line;
+  });
+
+  document.getElementById("summaryGrand").textContent = formatMoney(grand);
+  document.getElementById("summaryBadge").textContent =
+    itemCount === 0 ? "No items selected" : `${itemCount} item(s) selected`;
+
+  const empty = document.getElementById("emptySummary");
+  const wrap = document.getElementById("summaryTableWrap");
+  if (itemCount === 0) {
+    empty.style.display = "block";
+    wrap.style.display = "none";
+  } else {
+    empty.style.display = "none";
+    wrap.style.display = "block";
+  }
+}
+
+// Simple HTML escaping for product text (details are already your own markup)
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function recalcAll() {
+  const rows = document.querySelectorAll("#orderTable tbody tr");
+  let grand = 0;
+
+  rows.forEach(function (row) {
+    const boxCell = row.querySelector("td[data-box]");
+    const qtyInput = row.querySelector(".qty-input");
+    const totalCell = row.querySelector(".total-cell");
+
+    if (!boxCell || !qtyInput || !totalCell) return;
+
+    const price = parseFloat(boxCell.getAttribute("data-box")) || 0;
+    let qty = parseFloat(qtyInput.value);
+    if (isNaN(qty) || qty < 0) qty = 0;
+
+    const line = price * qty;
+    totalCell.textContent = formatMoney(line);
+    grand += line;
+  });
+
+  document.getElementById("grandTotal").textContent = formatMoney(grand);
+
+  // NEW: keep the summary in sync
+  updateSummary();
+}
+
+document.addEventListener("input", function (e) {
+  if (
+    e.target.classList.contains("qty-input") ||
+    ["custName","custCompany","custEmail","custPhone","custNotes"].includes(e.target.id)
+  ) {
+    recalcAll();
+  }
+});
+
+function printOrder() {
+  recalcAll();
+  window.print();
+}
+
+async function submitOrder() {
+  recalcAll();
+
+  const name = document.getElementById("custName").value || "";
+  const company = document.getElementById("custCompany").value || "";
+  const email = document.getElementById("custEmail").value || "";
+  const phone = document.getElementById("custPhone").value || "";
+  const notes = document.getElementById("custNotes").value || "";
+  const grand = document.getElementById("grandTotal").textContent || "$0.00";
+
+  const rows = document.querySelectorAll("#orderTable tbody tr");
+  const items = [];
+
+  rows.forEach(function (row) {
+    const qtyInput = row.querySelector(".qty-input");
+    const qty = parseFloat(qtyInput.value);
+    if (!qty || qty <= 0) return;
+
+    const product = row.cells[0].textContent.trim();
+    const details = row.cells[1].innerText.replace(/\s+/g, " ").trim();
+    const boxPrice = row.querySelector("td[data-box]").getAttribute("data-box");
+    const lineTotal = row.querySelector(".total-cell").textContent;
+
+    items.push({
+      product,
+      details,
+      boxPrice: parseFloat(boxPrice),
+      quantity: qty,
+      lineTotal
+    });
+  });
+
+  if (items.length === 0) {
+    alert("Please enter at least one quantity.");
+    return;
+  }
+
+  const orderData = {
+    customer: { name, company, email, phone, notes },
+    items,
+    grandTotal: grand,
+    submittedAt: new Date().toISOString()
+  };
+
+  try {
+    const response = await fetch(webhookURL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(orderData)
+    });
+
+    if (response.ok) {
+      alert("Order submitted successfully!");
+      // Optional: scroll to summary after submit
+      document.getElementById("summarySection").scrollIntoView({ behavior: "smooth" });
+    } else {
+      alert("Webhook error. Check Make scenario.");
+    }
+  } catch (error) {
+    alert("Network error. Are you running this from a local file?");
+    console.error(error);
+  }
+}
+
+// Initial render
+recalcAll();
+</script>
+</body>
 </html>
